@@ -3,7 +3,8 @@ title: "Hotel reviews for git"
 author: "Lukas"
 date: "September 11, 2019"
 output: 
-  github_document
+  html_document:
+    keep_md: true
 ---
 ```{r setup, include=FALSE, warning = F}
 knitr::opts_chunk$set(echo = TRUE)
