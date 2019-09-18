@@ -1,32 +1,286 @@
 ---
-title: "Untitled"
+title: "Hotel reviews for git"
 author: "Lukas"
-date: "September 18, 2019"
+date: "September 11, 2019"
 output: 
   html_document:
     keep_md: true
 ---
-
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning = F}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+#Introduction
+This projects includes data preprocessing and some vizualisations about hotels across Europe. Dataset contains 515,000 customer reviews of 1493 luxury hotels. 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+#Preparations {.tabset .tabset-fade .tabset-pills}
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+##Loading libraries
+Libraries that will be used for project:
+```{r, message=FALSE, warning=FALSE, results='hide'}
+library(dplyr) 
+library(ggplot2)
+library(stringr)
+library(tm) 
+library(wordcloud) 
+library(leaflet) 
+library(mapview) 
+library(data.table)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+##Reading data
+```{r, message=FALSE, warning=FALSE, results='hide'}
+path2 <- "C:/Users/Lukas/Desktop/R2/Hotel Reviews/Input/Hotel_Reviews.csv"
+data <- fread(path2, header = TRUE, showProgress = FALSE)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r, include=FALSE}
+options(tibble.width = Inf)
+```
+
+#Exploring data{.tabset}
+
+##Dimensions
+```{r, results='asis'}
+cat("Number of observations in dataset:", dim(data)[1],", number of features:", dim(data)[2])
+```
+
+##Structure
+```{r, tidy = TRUE}
+str(data)
+```
+
+##Summary
+```{r, tidy = TRUE}
+summary(data)
+```
+
+##Missing values
+Dataset contains 6536 missing values.
+```{r, tidy = TRUE}
+cat("Number of missing values in dataset:",  sum(is.na(data)))
+```
+##
+
+Extracting columns with missing values.
+```{r}
+missing_values <- lapply(data,function(x) sum(is.na(x)))
+missing_values[missing_values>0]
+```
+
+Number of hotels with missing values in latitude and longitude:
+```{r}
+table_with_missing_values <- data[which(is.na(data$lat == TRUE)), ] 
+length(unique(table_with_missing_values$Hotel_Address))
+```
+
+Hotel names with missing values:
+```{r}
+unique(table_with_missing_values$Hotel_Address)
+```
+
+Removing duplicates from data
+```{r}
+data <- distinct(data)
+```
+
+Filling missing values manually with cordinates from the internet
+```{r, results='hide'}
+data[data$Hotel_Address == "20 Rue De La Ga t 14th arr 75014 Paris France", ncol(data)] <- 2.323509
+data[data$Hotel_Address == "20 Rue De La Ga t 14th arr 75014 Paris France", ncol(data)-1] <- 48.840747
+data[data$Hotel_Address == "4 rue de la P pini re 8th arr 75008 Paris France", ncol(data)] <- 2.322156
+data[data$Hotel_Address == "4 rue de la P pini re 8th arr 75008 Paris France", ncol(data)-1] <- 48.875382
+data[data$Hotel_Address == "Gr nentorgasse 30 09 Alsergrund 1090 Vienna Austria", ncol(data)] <- 16.356793
+data[data$Hotel_Address == "Gr nentorgasse 30 09 Alsergrund 1090 Vienna Austria", ncol(data)-1] <- 48.224874
+data[data$Hotel_Address == "Josefst dter Stra e 10 12 08 Josefstadt 1080 Vienna Austria", ncol(data)] <- 16.353097
+data[data$Hotel_Address == "Josefst dter Stra e 10 12 08 Josefstadt 1080 Vienna Austria", ncol(data)-1] <- 48.209445
+data[data$Hotel_Address == "Landstra er G rtel 5 03 Landstra e 1030 Vienna Austria", ncol(data)] <- 16.393673
+data[data$Hotel_Address == "Landstra er G rtel 5 03 Landstra e 1030 Vienna Austria", ncol(data)-1] <- 48.211162
+data[data$Hotel_Address == "Pau Clar s 122 Eixample 08009 Barcelona Spain", ncol(data)] <- 2.170299
+data[data$Hotel_Address == "Pau Clar s 122 Eixample 08009 Barcelona Spain", ncol(data)-1] <- 41.394611
+data[data$Hotel_Address == "Sep lveda 180 Eixample 08011 Barcelona Spain", ncol(data)] <- 2.160687
+data[data$Hotel_Address == "Sep lveda 180 Eixample 08011 Barcelona Spain", ncol(data)-1] <- 41.384845
+data[data$Hotel_Address == "Taborstra e 8 A 02 Leopoldstadt 1020 Vienna Austria", ncol(data)] <- 16.414759
+data[data$Hotel_Address == "Taborstra e 8 A 02 Leopoldstadt 1020 Vienna Austria", ncol(data)-1] <- 48.209254
+data[data$Hotel_Address == "W hringer Stra e 33 35 09 Alsergrund 1090 Vienna Austria", ncol(data)] <- 16.356514
+data[data$Hotel_Address == "W hringer Stra e 33 35 09 Alsergrund 1090 Vienna Austria", ncol(data)-1] <- 48.224946
+data[data$Hotel_Address == "23 Rue Damr mont 18th arr 75018 Paris France", ncol(data)] <- 2.342705
+data[data$Hotel_Address == "23 Rue Damr mont 18th arr 75018 Paris France", ncol(data)-1] <- 48.888148
+data[data$Hotel_Address == "Bail n 4 6 Eixample 08010 Barcelona Spain", ncol(data)] <- 2.177693
+data[data$Hotel_Address == "Bail n 4 6 Eixample 08010 Barcelona Spain", ncol(data)-1] <- 41.391972
+data[data$Hotel_Address == "Hasenauerstra e 12 19 D bling 1190 Vienna Austria", ncol(data)] <- 16.345239
+data[data$Hotel_Address == "Hasenauerstra e 12 19 D bling 1190 Vienna Austria", ncol(data)-1] <- 48.233705
+data[data$Hotel_Address == "Josefst dter Stra e 22 08 Josefstadt 1080 Vienna Austria", ncol(data)] <- 16.351014
+data[data$Hotel_Address == "Josefst dter Stra e 22 08 Josefstadt 1080 Vienna Austria", ncol(data)-1] <- 48.209659
+data[data$Hotel_Address == "Paragonstra e 1 11 Simmering 1110 Vienna Austria", ncol(data)] <- 16.418367
+data[data$Hotel_Address == "Paragonstra e 1 11 Simmering 1110 Vienna Austria", ncol(data)-1] <- 48.171124
+data[data$Hotel_Address == "Savoyenstra e 2 16 Ottakring 1160 Vienna Austria", ncol(data)] <- 16.302941
+data[data$Hotel_Address == "Savoyenstra e 2 16 Ottakring 1160 Vienna Austria", ncol(data)-1] <- 48.215164
+data[data$Hotel_Address == "Sieveringer Stra e 4 19 D bling 1190 Vienna Austria", ncol(data)] <- 16.341607
+data[data$Hotel_Address == "Sieveringer Stra e 4 19 D bling 1190 Vienna Austria", ncol(data)-1] <- 48.245945
+data[data$Hotel_Address == "W hringer Stra e 12 09 Alsergrund 1090 Vienna Austria", ncol(data)] <- 16.359787
+data[data$Hotel_Address == "W hringer Stra e 12 09 Alsergrund 1090 Vienna Austria", ncol(data)-1] <- 48.216853
+
+```
+
+#Data analysis
+##Descriptive statistics and visualizations
+Average Review Scores:
+```{r}
+data%>%select(Average_Score,Hotel_Address)%>%distinct(Average_Score,Hotel_Address)%>%
+  ggplot(aes(x=Average_Score))+
+  geom_histogram(color='black',fill='brown', bins=30)+xlab("Average Review Score") + ylab("Frequency") +
+  scale_x_continuous(breaks = seq(5,10,0.5))
+```
+
+The most frequent scores:
+```{r}
+ggplot(data = data, aes(x = data$Reviewer_Score)) +
+  geom_histogram(bins = 40, fill = "palegreen4", color='black') +
+  scale_x_continuous(breaks = seq(min(data$Reviewer_Score), max(data$Reviewer_Score), 0.5)) + 
+  scale_y_continuous(breaks = seq(0,120000,20000)) +
+  xlab("Reviewer Score") + ylab("Frequency") +
+  ggtitle("Reviewer Score Frequency") +  
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Nationalities of the people that wrote a review about hotel
+```{r}
+data %>% select(Reviewer_Nationality) %>% group_by(Reviewer_Nationality) %>% 
+  count() %>% arrange(desc(n)) %>% head(10)
+```
+
+The most reviewed hotels:
+```{r}
+data %>% select(Hotel_Name, Total_Number_of_Reviews) %>% 
+  arrange(desc(Total_Number_of_Reviews)) %>% distinct() %>%
+  head(10) %>% select(Hotel_Name)
+```
+
+Number of total reviews reviewer has given:
+```{r}
+data %>% select(Total_Number_of_Reviews_Reviewer_Has_Given, Reviewer_Nationality) %>%
+  group_by(Total_Number_of_Reviews_Reviewer_Has_Given) %>%
+  count() %>% head(10) %>%
+  ggplot(., aes(Total_Number_of_Reviews_Reviewer_Has_Given, n)) +
+  geom_bar(stat = "identity", fill = "blue", color='black') + ylab("Frequency") + xlab("Total number of reviews reviewer has given") +
+  ggtitle("Total number of reviews") +
+  scale_x_continuous(breaks = seq_len(10))
+```
+
+Correlation coeficient between reviewer score and number of negative words in review:
+```{r}
+cor(data$Reviewer_Score, data$Review_Total_Negative_Word_Counts)
+```
+
+Best rated hotels: (hotels that have more than 10 reviews)
+```{r}
+data %>% select(Hotel_Name, Reviewer_Score) %>% group_by(Hotel_Name) %>% 
+  mutate(Daznis = n()) %>% filter(Daznis > 10) %>%
+  summarize(Vertinimas = mean(Reviewer_Score)) %>%
+  arrange(desc(Vertinimas)) %>% head(10)
+```
+
+Worst rated hotels: (hotels that have more than 10 reviews)
+```{r}
+data %>% select(Hotel_Name, Reviewer_Score) %>% group_by(Hotel_Name) %>% 
+  mutate(Daznis = n()) %>% filter(Daznis > 10) %>%
+  summarize(Vertinimas = mean(Reviewer_Score)) %>%
+  arrange((Vertinimas)) %>% head(10)
+```
+
+Dates with the biggest number of reviews written:
+```{r}
+data %>% select(Review_Date) %>% group_by(Review_Date) %>%
+  count() %>% arrange(desc(n)) %>% head(10) %>% 
+  ggplot(., aes(x = Review_Date, y = n)) +
+  geom_bar(stat="identity", fill = "palegreen4", color='black') + ylab("Frequency") + 
+  ggtitle("Dates with the biggest review frequences") + 
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+Months with a biggest number of reviews written:
+```{r}
+month <- sapply(data$Review_Date, function(x) as.numeric(str_split(as.character(x), "/")[[1]][1]))
+month %>% as.data.frame %>% 
+  ggplot(., aes(.)) +
+  geom_bar(fill = "lightsalmon1") + 
+  scale_x_continuous(breaks = seq_len(12)) + 
+  xlab("Month") + ylab("Frequency") +
+  ggtitle("Review date frequency in months") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Most popular hotels for lithuanians and mean of of the score that was given:
+```{r}
+data %>% select(Reviewer_Nationality, Hotel_Name, Reviewer_Score) %>% 
+  filter(trimws(Reviewer_Nationality) == "Lithuania") %>% 
+  group_by(Hotel_Name) %>% 
+  summarise(Frequency = n(), Mean = mean(Reviewer_Score)) %>%
+  arrange(desc(Frequency)) %>%
+  head(10)
+```
+
+Number of total reviews reviewer from Lithuania has given:
+```{r}
+data %>% filter(trimws(Reviewer_Nationality) == "Lithuania") %>%
+  select(Total_Number_of_Reviews_Reviewer_Has_Given) %>%
+  group_by(Total_Number_of_Reviews_Reviewer_Has_Given) %>% 
+  count() %>% head(10) %>%
+  ggplot(., aes(Total_Number_of_Reviews_Reviewer_Has_Given, n)) + 
+  geom_bar(stat = "identity", fill = "palegreen4", color='green') + ylab("Frequency") + xlab("Total number of reviews reviewer from LT has given")+
+  scale_x_continuous(breaks = seq_len(10))
+```
+ 
+##Wordcloud 
+
+Preparing data for wordcloud:
+```{r, warning = F}
+liet <- data %>% 
+  select(Reviewer_Nationality, Positive_Review, Negative_Review) %>%
+  filter(trimws(Reviewer_Nationality) == "Lithuania")
+liet2 <- liet[liet$Positive_Review != "No Positive" &
+                liet$Negative_Review != "No Negative", ]
+```
+
+The most frequent postive words that people from LT have written in the review:
+```{r, warning = F}
+pos2 <- Corpus(VectorSource(liet2$Positive_Review))
+pos2 <- tm_map(pos2, content_transformer(tolower))
+pos2 <- tm_map(pos2, removeNumbers)          
+pos2 <- tm_map(pos2, removeWords, stopwords("en"))  
+pos2 <- tm_map(pos2, stripWhitespace)
+tdm <- TermDocumentMatrix(pos2)
+m <- as.matrix(tdm)
+v <- sort(rowSums(m), decreasing = TRUE)
+d <- data.frame(word = names(v), freq = v)
+wordcloud(d$word, d$freq, random.order = FALSE, rot.per = 0.3, max.words = 200, colors = brewer.pal(7, "Dark2"))
+```
+
+The most frequent negative words that people from LT have written in the review:
+```{r, warning = F}
+neg <- Corpus(VectorSource(liet2$Negative_Review))
+neg <- tm_map(neg, content_transformer(tolower))
+neg <- tm_map(neg, removeNumbers)          
+neg <- tm_map(neg, removeWords, stopwords("en"))  
+neg <- tm_map(neg, stripWhitespace)
+tdm2 <- TermDocumentMatrix(neg)
+m2 <- as.matrix(tdm2)
+v2 <- sort(rowSums(m2), decreasing = TRUE)
+d2 <- data.frame(word = names(v2), freq = v2)
+wordcloud(d2$word, d2$freq, random.order = FALSE, rot.per = 0.3, max.words = 200, colors = brewer.pal(8, "Accent"))
+```
+
+##Location of the hotels
+
+```{r}
+zem <- data %>% select(Hotel_Name, lat, lng, Average_Score) %>% distinct()
+koor <- cbind(zem$lng, zem$lat)
+c <- leaflet() %>% 
+  addProviderTiles('OpenStreetMap.Mapnik') %>%
+  addMarkers(data = koor,
+             popup = paste0("Hotel: ", zem$Hotel_Name,
+                          "<br>Average score: ", zem$Average_Score))
+c
+```
+
