@@ -1,17 +1,8 @@
----
-title: "Hotel reviews for git"
-author: "Lukas"
-date: "September 11, 2019"
-output: 
-  html_document:
-    keep_md: true
----
 
-
-### Introduction
+# Introduction
 This projects includes data preprocessing and some vizualisations about hotels across Europe. Dataset contains 515,000 customer reviews of 1493 luxury hotels. 
 
-### Preparations 
+## Preparations 
 
 Libraries that will be used for project:
 
@@ -250,7 +241,8 @@ data[data$Hotel_Address == "W hringer Stra e 12 09 Alsergrund 1090 Vienna Austri
 data[data$Hotel_Address == "W hringer Stra e 12 09 Alsergrund 1090 Vienna Austria", ncol(data)-1] <- 48.216853
 ```
 
-### Data analysis
+# Data analysis
+## Descriptive statistics and visualizations
 
 Average Review Scores:
 ```r
@@ -465,7 +457,7 @@ data %>% filter(trimws(Reviewer_Nationality) == "Lithuania") %>%
 
 ![](testa_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
  
-### Wordcloud 
+## Wordcloud 
 
 Preparing data for wordcloud:
 
@@ -511,7 +503,7 @@ wordcloud(d2$word, d2$freq, random.order = FALSE, rot.per = 0.3, max.words = 200
 
 ![](testa_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
-##Location of the hotels
+## Location of the hotels
 
 
 ```r
