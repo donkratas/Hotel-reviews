@@ -252,7 +252,7 @@ data%>%select(Average_Score,Hotel_Address)%>%distinct(Average_Score,Hotel_Addres
   scale_x_continuous(breaks = seq(5,10,0.5))
 ```
 
-![](testa_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](figures/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 The most frequent scores:
 
@@ -266,7 +266,7 @@ ggplot(data = data, aes(x = data$Reviewer_Score)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](testa_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](figures/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
 Nationalities of the people that wrote a review about hotel
 
@@ -326,7 +326,7 @@ data %>% select(Total_Number_of_Reviews_Reviewer_Has_Given, Reviewer_Nationality
   scale_x_continuous(breaks = seq_len(10))
 ```
 
-![](testa_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](figures/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
 Correlation coeficient between reviewer score and number of negative words in review:
 
@@ -399,7 +399,7 @@ data %>% select(Review_Date) %>% group_by(Review_Date) %>%
   theme(axis.text.x = element_text(angle = 60, hjust = 1))
 ```
 
-![](testa_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+![](figures/figure-html/unnamed-chunk-21-1.png)<!-- -->
 
 Months with a biggest number of reviews written:
 
@@ -414,7 +414,7 @@ month %>% as.data.frame %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](testa_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
+![](figures/figure-html/unnamed-chunk-22-1.png)<!-- -->
 
 Most popular hotels for lithuanians and mean of of the score that was given:
 
@@ -455,7 +455,7 @@ data %>% filter(trimws(Reviewer_Nationality) == "Lithuania") %>%
   scale_x_continuous(breaks = seq_len(10))
 ```
 
-![](testa_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+![](figures/figure-html/unnamed-chunk-24-1.png)<!-- -->
  
 ## Wordcloud 
 
@@ -484,7 +484,7 @@ d <- data.frame(word = names(v), freq = v)
 wordcloud(d$word, d$freq, random.order = FALSE, rot.per = 0.3, max.words = 200, colors = brewer.pal(7, "Dark2"))
 ```
 
-![](testa_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+![](figures/figure-html/unnamed-chunk-26-1.png)<!-- -->
 
 The most frequent negative words that people from LT have written in the review:
 
@@ -501,7 +501,7 @@ d2 <- data.frame(word = names(v2), freq = v2)
 wordcloud(d2$word, d2$freq, random.order = FALSE, rot.per = 0.3, max.words = 200, colors = brewer.pal(8, "Accent"))
 ```
 
-![](testa_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
+![](figures/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
 ## Location of the hotels
 
